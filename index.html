@@ -1,0 +1,60 @@
+<title>Map of US</title>
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+/>
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+</head>
+<body>
+<h1>Map of US</h1>
+<div id="map" style="height: 800px;"></div>
+<div id="coordinates">
+  <p id="marker1"><strong>Marker 1: </strong></p>
+  <p id="marker2"><strong>Marker 2: </strong></p>
+  <p id="marker3"><strong>Marker 3: </strong></p>
+</div>
+
+<script>
+  const map = L.map("map").setView([37.0902, -95.7129], 4);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 18,
+  }).addTo(map);
+
+  function getRandomInRange(from, to, fixed) {
+    return (Math.random() * (to - from) + from).toFixed(fixed) * 1;
+  }
+
+  const coordinates = [
+    { lat: getRandomInRange(30, 35, 3), lon: getRandomInRange(-100, -90, 3) },
+    { lat: getRandomInRange(30, 35, 3), lon: getRandomInRange(-100, -90, 3) },
+    { lat: getRandomInRange(30, 35, 3), lon: getRandomInRange(-100, -90, 3) },
+  ];
+
+  async function fetchLocality(lat, lon, elementId) {
+    try {
+      const response = await fetch(
+        `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`
+      );
+      const data = await response.json();
+      document.getElementById(elementId).innerHTML += `Locality: ${
+        data.locality || "N/A"
+      }`;
+    } catch (error) {
+      console.error("Error fetching locality:", error);
+      document.getElementById(elementId).innerHTML += "Locality: N/A";
+    }
+  }
+
+  coordinates.forEach((coord, index) => {
+    const marker = L.marker([coord.lat, coord.lon]).addTo(map);
+    const elementId = `marker${index + 1}`;
+    document.getElementById(
+      elementId
+    ).innerHTML += `(${coord.lat}, ${coord.lon})<br>`;
+    fetchLocality(coord.lat, coord.lon, elementId);
+  });
+
+  const bounds = coordinates.map((coord) => [coord.lat, coord.lon]);
+  map.fitBounds(bounds);
+</script>
+</body>
